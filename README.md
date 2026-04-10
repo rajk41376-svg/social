@@ -1,98 +1,150 @@
-# Social-to-Lead Agentic Workflow
-
-# 1. Import Libraries
-# -------------------------------
-import os
-import json
-import re
-import random
-import string
-
-# -------------------------------
-# 2. Knowledge Base (FAQ)
-# -------------------------------
-KB = [
-    {
-        "keywords": ["feature","workflow","automation"],
-        "answer": "Our SaaS product automates workflows with AI-powered triggers."
-    },
-    {
-        "keywords": ["support","help","issue"],
-        "answer": "You can reach support via chat or email 24/7."
-    },
-    {
-        "keywords": ["integration","api"],
-        "answer": "We provide REST APIs and integrations with Slack, Salesforce, and HubSpot."
-    },
-    {
-        "keywords": ["pricing","cost","subscription"],
-        "answer": "We offer flexible subscription plans tailored to your business size."
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Social-to-Lead Agentic Workflow</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      padding: 0;
     }
-]
-
-# -------------------------------
-# 3. Intent Detection
-# -------------------------------
-def detect_intent(message: str) -> str:
-    message = message.lower()
-    if any(word in message for word in ["price","cost","subscription","demo","trial","integration"]):
-        return "high_intent"
-    elif any(word in message for word in ["feature","how","what","support","faq","api"]):
-        return "product_query"
-    else:
-        return "general"
-
-# -------------------------------
-# 4. Retrieval Augmented Generation (RAG)
-# -------------------------------
-def retrieve_answer(query: str) -> str:
-    query = query.lower()
-    for item in KB:
-        if any(keyword in query for keyword in item["keywords"]):
-            return item["answer"]
-    return "I couldn’t find an exact match, but our support team can assist further."
-
-# -------------------------------
-# 5. Lead Capture Tool
-# -------------------------------
-def capture_lead(message: str, session: dict) -> dict:
-    # Simple placeholder: in real app, parse name/email/company
-    lead = {
-        "name": session.get("name","Rahul"),
-        "email": session.get("email","rahul@example.com"),
-        "company": session.get("company","Unknown"),
-        "lead_id": ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    #chatbox {
+      width: 60%;
+      margin: 40px auto;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 20px;
     }
-    # Here you could push to CRM or database
-    return lead
+    .message {
+      margin: 10px 0;
+    }
+    .user {
+      text-align: right;
+      color: #333;
+    }
+    .agent {
+      text-align: left;
+      color: #0078d7;
+    }
+    #inputArea {
+      display: flex;
+      margin-top: 20px;
+    }
+    #userInput {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #sendBtn {
+      padding: 10px 20px;
+      margin-left: 10px;
+      background: #0078d7;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #sendBtn:hover {
+      background: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <div id="chatbox">
+    <h2>🤖 Social-to-Lead Agentic Workflow</h2>
+    <div id="conversation"></div>
+    <div id="inputArea">
+      <input type="text" id="userInput" placeholder="Type your message...">
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
 
-# -------------------------------
-# 6. Agent Workflow
-# -------------------------------
-def agent_response(user_message, session):
-    intent = detect_intent(user_message)
+  <script>
+    // Knowledge Base (FAQ)
+    const KB = [
+      { keywords: ["feature","workflow","automation"], answer: "Our SaaS product automates workflows with AI-powered triggers." },
+      { keywords: ["support","help","issue"], answer: "You can reach support via chat or email 24/7." },
+      { keywords: ["integration","api"], answer: "We provide REST APIs and integrations with Slack, Salesforce, and HubSpot." },
+      { keywords: ["pricing","cost","subscription"], answer: "We offer flexible subscription plans tailored to your business size." }
+    ];
 
-    if intent == "product_query":
-        return retrieve_answer(user_message)
+    // Intent Detection
+    function detectIntent(message) {
+      const msg = message.toLowerCase();
+      if (["price","cost","subscription","demo","trial","integration"].some(word => msg.includes(word))) {
+        return "high_intent";
+      } else if (["feature","how","what","support","faq","api"].some(word => msg.includes(word))) {
+        return "product_query";
+      } else {
+        return "general";
+      }
+    }
 
-    elif intent == "high_intent":
-        lead_info = capture_lead(user_message, session)
-        return f"I’d love to connect you with our team. I’ve captured your details: {lead_info}"
+    // RAG Retrieval
+    function retrieveAnswer(query) {
+      const msg = query.toLowerCase();
+      for (let item of KB) {
+        if (item.keywords.some(keyword => msg.includes(keyword))) {
+          return item.answer;
+        }
+      }
+      return "I couldn’t find an exact match, but our support team can assist further.";
+    }
 
-    else:
-        return "I’m here to help! Could you clarify your question?"
+    // Lead Capture
+    function captureLead(session) {
+      const leadId = Math.random().toString(36).substring(2,8).toUpperCase();
+      return {
+        name: session.name || "Rahul",
+        email: session.email || "rahul@example.com",
+        company: session.company || "Unknown",
+        lead_id: leadId
+      };
+    }
 
-# -------------------------------
-# 7. Run Agent (Console Loop)
-# -------------------------------
-if __name__ == "__main__":
-    print("🤖 Social-to-Lead Agentic Workflow Started")
-    print("Type 'quit' to exit.\n")
-    session = {}
-    while True:
-        user_message = input("You: ")
-        if user_message.lower() in ["quit","exit"]:
-            print("Agent: Goodbye!")
-            break
-        print("Agent:", agent_response(user_message, session))
+    // Agent Response
+    function agentResponse(userMessage, session) {
+      const intent = detectIntent(userMessage);
+      if (intent === "product_query") {
+        return retrieveAnswer(userMessage);
+      } else if (intent === "high_intent") {
+        const leadInfo = captureLead(session);
+        return `I’d love to connect you with our team. I’ve captured your details: ${JSON.stringify(leadInfo)}`;
+      } else {
+        return "I’m here to help! Could you clarify your question?";
+      }
+    }
 
+    // Chat UI
+    const conversation = document.getElementById("conversation");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const session = {};
+
+    function addMessage(text, sender) {
+      const div = document.createElement("div");
+      div.className = "message " + sender;
+      div.textContent = (sender === "user" ? "You: " : "Agent: ") + text;
+      conversation.appendChild(div);
+      conversation.scrollTop = conversation.scrollHeight;
+    }
+
+    sendBtn.addEventListener("click", () => {
+      const msg = userInput.value.trim();
+      if (!msg) return;
+      addMessage(msg, "user");
+      const response = agentResponse(msg, session);
+      addMessage(response, "agent");
+      userInput.value = "";
+    });
+
+    userInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendBtn.click();
+    });
+  </script>
+</body>
+</html>
